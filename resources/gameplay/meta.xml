@@ -1,0 +1,5 @@
+<meta>
+	<info name="Gameplay handler" description="A dedicated gameplay handler resource, which controls all gameplay." />
+	
+	<script src="server/player.lua" type="server" />
+</meta>
