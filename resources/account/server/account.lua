@@ -57,3 +57,38 @@ function delete( user_id, permanently )
 	
 	return false
 end
+
+function try( username, password )
+	if ( not username ) and ( not password ) then
+		outputDebugString( "ACCOUNT: No arguments passed in.", 1 )
+		return false, 1
+	end
+	
+	if ( not password ) and ( type( username ) == "table" ) then
+		password = username.password
+		username = username.username
+	end
+	
+	if ( password ) then
+		if ( exports.database:query( "SELECT NULL FROM `accounts` WHERE `username` = ? AND `password` = ? AND `is_deleted` = '0' LIMIT 1", username, password ) ) then
+			return true
+		else
+			return false, 3
+		end
+	end
+	
+	return false
+end
+
+function process( player )
+	if ( not isElement( player ) ) then
+		outputDebugString( "ACCOUNT: No valid player element passed in.", 1 )
+		return false, 1
+	end
+	
+	if ( exports.database:execute( "UPDATE `accounts` SET `last_login` = NOW(), `last_ip` = ? WHERE `id` = ?" ) ) then
+		
+	end
+	
+	return false
+end
