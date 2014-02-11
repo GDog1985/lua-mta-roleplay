@@ -1,0 +1,9 @@
+<meta>
+	<info name="Account handler" description="A dedicated account handler resource, which controls all accounts initialized by the resource." />
+	
+	<script src="server/account.lua" type="server" />
+	
+	<export function="new" type="server" />
+	<export function="get" type="server" />
+	<export function="delete" type="server" />
+</meta>
