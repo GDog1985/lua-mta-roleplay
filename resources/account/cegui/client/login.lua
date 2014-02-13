@@ -71,6 +71,16 @@ addEventHandler( getResourceName( resource ) .. ":cegui:error", root,
 	end
 )
 
+addEvent( getResourceName( resource ) .. ":cegui:close", true)
+addEventHandler( getResourceName( resource ) .. ":cegui:close", root,
+	function( )
+		if ( isElement( cegui.windows.login ) ) then
+			showCursor( false, false )
+			destroyElement( cegui.windows.login )
+		end
+	end
+)
+
 addEventHandler( "onClientResourceStart", resourceRoot,
 	function( )
 		if ( logged_in ) then return end

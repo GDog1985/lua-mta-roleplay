@@ -1,6 +1,7 @@
 <meta>
 	<info name="Account handler" description="A dedicated account handler resource, which controls all accounts initialized by the resource." />
 	
+	<script src="client/account.lua" type="client" cache="false" />
 	<script src="server/account.lua" type="server" />
 	
 	<script src="cegui/client/login.lua" type="client" cache="false" />
