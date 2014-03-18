@@ -1,14 +1,14 @@
 <meta>
-	<info name="Database handler" description="A dedicated database handler resource, which controls all database queries and connections initialized by the resource." />
-	
+	<info name="Database handler" description="A dedicated database handler resource, which controls all database queries and connections initialized by the resource." author="Socialz" type="script" />
 	<script src="server/database.lua" type="server" />
 	<script src="server/verification.lua" type="server" />
-	
+	<min_mta_version server="1.3.5" />
+	<export function="disconnect" type="server" />
 	<export function="ping" type="server" />
 	<export function="query" type="server" />
 	<export function="execute" type="server" />
 	<export function="insert_id" type="server" />
 	<export function="free_result" type="server" />
-	
-	<export function="verify_database" type="server" />
+	<export function="escape_string" type="server" />
+	<export function="verify_table" type="server" />
 </meta>

@@ -1,6 +1,8 @@
-local default_charset = get( "default_charset" ) or "latin1"
-local default_engine = get( "default_engine" ) or "InnoDB"
-local tables = {
+database.configuration.automated_resources = { account = "accounts", vehicle = "vehicles" }
+database.configuration.default_charset = get( "default_charset" ) or "utf8"
+database.configuration.default_engine = get( "default_engine" ) or "InnoDB"
+database.utility = { }
+database.verification = {
 	-- name, type, length, default, is_unsigned, is_null, is_auto_increment, key_type
 	accounts = {
 		{ name = "id", type = "int", length = 10, is_unsigned = true, is_auto_increment = true, key_type = "primary" },
@@ -46,33 +48,55 @@ local tables = {
 	}
 }
 
-local keys = { unique = true, primary = true, index = true }
-local function getFormattedKeyType( column_name, key )
-	if ( column_name ) and ( keys[ key ] ) then
-		return "\r\n" .. ( key ~= "index" and key:upper( ) .. " " or "" ) .. "KEY (`" .. column_name .. "`),"
+database.utility.keys = { unique = true, primary = true, index = true }
+function getFormattedKeyType( keyValue, keyType )
+	if ( keyValue ) and ( database.utility.keys[ keyType ] ) then
+		return "\r\n" .. ( keyType ~= "index" and keyType:upper( ) .. " " or "" ) .. "KEY (`" .. keyValue .. "`),"
 	end
 	return ""
 end
 
-function verify_database( table_name )
-	if ( table_name ) and ( tables[ table_name ] ) then
-		local query = query( "SELECT 1 FROM `??`", table_name )
+function verify_table( tableName )
+	local tableName = escape_string( tableName, "char_digit_special" )
+	if ( tableName ) and ( database.verification[ tableName ] ) then
+		local query = query( "SELECT 1 FROM `" .. tableName .. "`" )
 		if ( query ) then
-			return true, 1
+			return true, 0
 		else
-			local query_string = "CREATE TABLE IF NOT EXISTS `" .. table_name .. "` ("
-			for columnID, columnData in pairs( tables[ table_name ] ) do
-				query_string = query_string .. "\r\n`" .. columnData.name .. "` " .. columnData.type .. ( columnData.length and "(" .. columnData.length .. ")" or "" ) .. ( columnData.is_unsigned and " unsigned" or "" ) .. " " .. ( columnData.is_null and "NULL" or "NOT NULL" ) .. ( columnData.default and " DEFAULT '" .. columnData.default .. "'" or "" ) .. ( columnData.is_auto_increment and " AUTO_INCREMENT" or "" ) .. ( #tables[ table_name ] ~= columnID and "," or "" ) .. getFormattedKeyType( columnData.name, columnData.key_type )
+			outputDebugString( "DATABASE: Don't mind the warning messages above; verify_table is running right now." )
+			
+			local query_string = "CREATE TABLE IF NOT EXISTS `" .. tableName .. "` ("
+			
+			for columnID, columnData in pairs( database.verification[ tableName ] ) do
+				query_string = query_string .. "\r\n`" .. columnData.name .. "` " .. columnData.type .. ( columnData.length and "(" .. columnData.length .. ")" or "" ) .. ( columnData.is_unsigned and " unsigned" or "" ) .. " " .. ( columnData.is_null and "NULL" or "NOT NULL" ) .. ( columnData.default and " DEFAULT '" .. columnData.default .. "'" or "" ) .. ( columnData.is_auto_increment and " AUTO_INCREMENT" or "" ) .. ( #database.verification[ tableName ] ~= columnID and "," or "" ) .. getFormattedKeyType( columnData.name, columnData.key_type )
 			end
-			query_string = query_string .. "\r\n) ENGINE=" .. default_engine .. " DEFAULT CHARSET=" .. default_charset .. ";"
+			
+			query_string = query_string .. "\r\n) ENGINE=" .. database.configuration.default_engine .. " DEFAULT CHARSET=" .. database.configuration.default_charset .. ";"
+			
 			if ( execute( query_string ) ) then
-				outputDebugString( "DATABASE: Created table '" .. table_name .. "'." )
+				outputDebugString( "DATABASE: Created table '" .. tableName .. "'." )
 				return true, 2
 			else
-				outputDebugString( "DATABASE: Unable to create table '" .. table_name .. "'.", 2 )
+				outputDebugString( "DATABASE: Unable to create table '" .. tableName .. "'.", 2 )
 				return false, 2
 			end
+			
+			return false
 		end
 	end
 	return false, 1
 end
+
+addEventHandler( "onResourceStart", root,
+	function( resource )
+		if ( database.configuration.automated_resources[ getResourceName( resource ) ] ) then
+			outputDebugString( "DATABASE: Verification check will be ran on just started '" .. getResourceName( resource ) .. "' resource." )
+			local _return, _code = verify_table( database.configuration.automated_resources[ getResourceName( resource ) ] )
+			if ( _return ) and ( _code > 0 ) then
+				outputDebugString( "DATABASE: Verification check completed: database created." )
+			else
+				outputDebugString( "DATABASE: Verification check completed: database wasn't created, because it already exists, most probably." )
+			end
+		end
+	end
+)
