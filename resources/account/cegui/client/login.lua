@@ -1,5 +1,4 @@
 ﻿cegui = { }
-cegui.__index = cegui
 cegui.windows = { }
 cegui.windows.login = { }
 cegui.windows.login.input = { }
@@ -13,7 +12,7 @@ local window_width, window_height = 320, 320
 
 local logged_in = false
 
-function cegui:showLoginWindow( )
+function showLoginWindow( )
 	if ( isElement( cegui.windows.login ) ) then
 		showCursor( false, false )
 		destroyElement( cegui.windows.login )
@@ -89,6 +88,6 @@ addEventHandler( "onClientResourceStart", resourceRoot,
 		showPlayerHudComponent( "all", false )
 		showChat( false )
 		
-		cegui:showLoginWindow( )
+		showLoginWindow( )
 	end
 )
