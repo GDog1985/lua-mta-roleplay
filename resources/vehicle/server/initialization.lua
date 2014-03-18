@@ -1,6 +1,5 @@
 addEventHandler( "onResourceStart", resourceRoot,
 	function( )
-		exports.database:verify_database( "vehicles" )
 		outputDebugString( "VEHICLE: Loading vehicles in 10,000 ms." )
 		setTimer( loadVehicles, 10000, 1 )
 	end
