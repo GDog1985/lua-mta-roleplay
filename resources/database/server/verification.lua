@@ -67,7 +67,7 @@ function verify_table( tableName )
 			
 			local query_string = "CREATE TABLE IF NOT EXISTS `" .. tableName .. "` ("
 			
-			for columnID, columnData in pairs( database.verification[ tableName ] ) do
+			for columnID, columnData in ipairs( database.verification[ tableName ] ) do
 				query_string = query_string .. "\r\n`" .. columnData.name .. "` " .. columnData.type .. ( columnData.length and "(" .. columnData.length .. ")" or "" ) .. ( columnData.is_unsigned and " unsigned" or "" ) .. " " .. ( columnData.is_null and "NULL" or "NOT NULL" ) .. ( columnData.default and " DEFAULT '" .. columnData.default .. "'" or "" ) .. ( columnData.is_auto_increment and " AUTO_INCREMENT" or "" ) .. ( #database.verification[ tableName ] ~= columnID and "," or "" ) .. getFormattedKeyType( columnData.name, columnData.key_type )
 			end
 			
