@@ -106,14 +106,22 @@ function delete( vehicle_id, permanently )
 		return false, 1
 	end
 	
-	if ( not permanently ) then
-		if ( exports.database:execute( "UPDATE `vehicles` SET `is_deleted` = ? WHERE `id` = ?", 1, tonumber( vehicle_id ) ) ) then
-			return true
+	if ( vehicles[ vehicle_id ] ) then
+		if ( not permanently ) then
+			if ( exports.database:execute( "UPDATE `vehicles` SET `is_deleted` = ? WHERE `id` = ?", 1, tonumber( vehicle_id ) ) ) then
+				return true
+			end
+		else
+			if ( exports.database:execute( "DELETE FROM `vehicles` WHERE `id` = ?", tonumber( vehicle_id ) ) ) then
+				return true
+			end
 		end
-	else
-		if ( exports.database:execute( "DELETE FROM `vehicles` WHERE `id` = ?", tonumber( vehicle_id ) ) ) then
-			return true
+		
+		if ( isElement( vehicles[ vehicle_id ].vehicle ) ) then
+			destroyElement( vehicles[ vehicle_id ].vehicle )
 		end
+		
+		vehicles[ vehicle_id ] = nil
 	end
 	
 	return false
