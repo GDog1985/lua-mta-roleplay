@@ -1,5 +1,5 @@
-﻿addEvent( "cegui:verify", true )
-addEventHandler( "cegui:verify", root,
+﻿addEvent( getResourceName( resource ) .. ":cegui:verify", true )
+addEventHandler( getResourceName( resource ) .. ":cegui:verify", root,
 	function( input, loginOrRegister )
 		if ( client ~= source ) or ( type( input ) ~= "table" ) or ( #input ~= 2 ) then return end
 		if ( input.username:len( ) > 2 ) then

@@ -55,6 +55,26 @@ function get( parameter )
 	return false
 end
 
+function save( player, wasAutomatic )
+	if ( not isElement( player ) ) or ( getElementType( player ) ~= "player" ) then
+		outputDebugString( "ACCOUNT: No player defined.", 1 )
+		return false, 1
+	end
+	
+	if ( account.player[ player ] ) then
+		if ( exports.database:execute( "UPDATE `accounts` SET `username` = ?, `admin` = ? WHERE `id` = ?", account.player[ player ].username, account.player[ player ].admin, account.player[ player ].id ) ) then
+			if ( not wasAutomatic ) then
+				outputDebugString( "ACCOUNT: Saved account '" .. account.player[ player ].username .. "'." )
+			end
+			return true
+		else
+			return false, 3
+		end
+	end
+	
+	return false, 2
+end
+
 function delete( userID, queueDestroy )
 	if ( not userID ) then
 		outputDebugString( "ACCOUNT: No user ID defined.", 1 )
@@ -86,7 +106,7 @@ end
 
 function try( player, username, password )
 	if ( not isElement( player ) ) or ( ( not username ) and ( not password ) ) then
-		outputDebugString( "ACCOUNT: No arguments passed in.", 1 )
+		outputDebugString( "ACCOUNT: Invalid argument(s) passed in.", 1 )
 		return false, 1
 	end
 	
@@ -126,12 +146,24 @@ addEventHandler( getResourceName( resource ) .. ":try", root, try )
 
 addEvent( getResourceName( resource ) .. ":login", true )
 addEventHandler( getResourceName( resource ) .. ":login", root,
-	function( )
-		if ( client ~= source ) then return end
-		if ( try( client, username, password ) ) then
-			triggerClientEvent( client, getResourceName( resource ) .. ":finish", client )
+	function( input )
+		if ( try( client, input.username, input.password ) ) then
+			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:close", client )
 		else
-			-- Error
+			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 3 )
+			outputDebugString( "ERR 3" )
+		end
+	end
+)
+
+addEvent( getResourceName( resource ) .. ":register", true )
+addEventHandler( getResourceName( resource ) .. ":register", root,
+	function( input )
+		if ( not get( input.username ) ) then
+			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:close", client )
+		else
+			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 4 )
+			outputDebugString( "ERR 4" )
 		end
 	end
 )
