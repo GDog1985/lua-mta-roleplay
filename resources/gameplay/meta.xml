@@ -1,5 +1,6 @@
 <meta>
-	<info name="Gameplay handler" description="A dedicated gameplay handler resource, which controls all gameplay." />
-	
+	<info name="Gameplay handler" description="A dedicated gameplay handler resource, which controls all gameplay." author="Socialz" type="script" />
 	<script src="server/player.lua" type="server" />
+	<script src="server/synchronization.lua" type="server" />
+	<export function="cursor" type="server" />
 </meta>
