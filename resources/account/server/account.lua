@@ -7,8 +7,8 @@ function new( username, password )
 		return false, 1
 	end
 	
-	local username, password = exports.database:escape_string( username, "account" ), exports.database:escape_string( password, "account" )
-	if ( exports.database:query( "SELECT NULL FROM `accounts` WHERE `username` = ? LIMIT 1", username ) ) then
+	local username, password = base64Encode( exports.database:escape_string( username, "account" ) ), base64Encode( sha512( exports.database:escape_string( password, "account" ) ) )
+	if ( exports.database:query( "SELECT 1 FROM `accounts` WHERE `username` = ? LIMIT 1", username ) ) then
 		return false, 2
 	else
 		return exports.database:insert_id( "INSERT INTO `accounts` (`username`, `password`) VALUES (?, ?)", username, password )
@@ -25,15 +25,15 @@ function get( parameter )
 	
 	if ( type( parameter ) == "integer" ) then
 		local parameter = exports.database:escape_string( parameter, "digit" )
-		local result = exports.database:query( "SELECT `username` FROM `accounts` WHERE `id` = ? LIMIT 1", parameter )
-		if ( result ) then
+		local result, num_rows = exports.database:query( "SELECT `username` FROM `accounts` WHERE `id` = ? LIMIT 1", parameter )
+		if ( result ) and ( num_rows > 0 ) then
 			return result
 		else
 			return false, 2
 		end
 	elseif ( type( parameter ) == "string" ) then
-		local result = exports.database:query( "SELECT `id` FROM `accounts` WHERE `username` = ? LIMIT 1", parameter )
-		if ( result ) then
+		local result, num_rows = exports.database:query( "SELECT `id` FROM `accounts` WHERE `username` = ? LIMIT 1", base64Encode( exports.database:escape_string( parameter ) ) )
+		if ( result ) and ( num_rows > 0 ) then
 			return result
 		else
 			return false, 2
@@ -41,8 +41,8 @@ function get( parameter )
 	elseif ( type( parameter ) == "userdata" ) and ( isElement( parameter ) ) and ( getElementType( parameter ) == "player" ) then
 		local preAccount = account.currents[ parameter ]
 		if ( preAccount ) then
-			local result = exports.database:query( "SELECT `username` FROM `accounts` WHERE `id` = ? LIMIT 1", preAccount.id )
-			if ( result ) then
+			local result, num_rows = exports.database:query( "SELECT `username` FROM `accounts` WHERE `id` = ? LIMIT 1", preAccount.id )
+			if ( result ) and ( num_rows > 0 ) then
 				return result
 			else
 				return false, 2
@@ -105,38 +105,31 @@ function is_on_already( username )
 end
 
 function try( player, username, password )
-	if ( not isElement( player ) ) or ( ( not username ) and ( not password ) ) then
+	if ( not isElement( player ) ) or ( not username ) or ( not password ) then
 		outputDebugString( "ACCOUNT: Invalid argument(s) passed in.", 1 )
 		return false, 1
 	end
 	
-	if ( not password ) and ( type( username ) == "table" ) then
-		password = username.password
-		username = username.username
-	end
-	
-	if ( password ) then
-		local query = exports.database:query( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `username` = ? AND `password` = ? AND `is_deleted` = '0' LIMIT 1", exports.database:escape_string( username, "account" ), exports.database:escape_string( password, "account" ) )
-		if ( query ) then
-			if ( not is_on_already( query.username ) ) then
-				if ( exports.database:execute( "UPDATE `accounts` SET `last_login` = NOW(), `last_ip` = ? WHERE `id` = ?", getPlayerIP( player ), query.id ) ) then
-					account.player[ player ] = {
-						id = query.id,
-						username = query.username,
-						admin = query.admin,
-						loggedin = true
-					}
-					
-					return true
-				else
-					return false, 4
-				end
+	local query, num_rows = exports.database:query( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `username` = ? AND `password` = ? AND `is_deleted` = '0' LIMIT 1", exports.database:escape_string( username, "account" ), exports.database:escape_string( password, "account" ) )
+	if ( query ) and ( num_rows > 0 ) then
+		if ( not is_on_already( query.username ) ) then
+			if ( exports.database:execute( "UPDATE `accounts` SET `last_login` = NOW(), `last_ip` = ? WHERE `id` = ?", getPlayerIP( player ), query.id ) ) then
+				account.player[ player ] = {
+					id = query.id,
+					username = query.username,
+					admin = query.admin,
+					loggedin = true
+				}
+				
+				return true
 			else
-				return false, 3
+				return false, 4
 			end
 		else
-			return false, 2
+			return false, 3
 		end
+	else
+		return false, 2
 	end
 	
 	return false
@@ -147,11 +140,11 @@ addEventHandler( getResourceName( resource ) .. ":try", root, try )
 addEvent( getResourceName( resource ) .. ":login", true )
 addEventHandler( getResourceName( resource ) .. ":login", root,
 	function( input )
-		if ( try( client, input.username, input.password ) ) then
-			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:close", client )
+		local try, error = try( source, input.username, input.password )
+		if ( try ) then
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:close", source )
 		else
-			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 3 )
-			outputDebugString( "ERR 3" )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 3, error )
 		end
 	end
 )
@@ -160,10 +153,9 @@ addEvent( getResourceName( resource ) .. ":register", true )
 addEventHandler( getResourceName( resource ) .. ":register", root,
 	function( input )
 		if ( not get( input.username ) ) then
-			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:close", client )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:close", source )
 		else
-			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 4 )
-			outputDebugString( "ERR 4" )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 4 )
 		end
 	end
 )
