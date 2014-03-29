@@ -3,9 +3,9 @@
 addEvent( getResourceName( resource ) .. ":cegui:verify", true )
 addEventHandler( getResourceName( resource ) .. ":cegui:verify", root,
 	function( input, loginOrRegister )
-		if ( client ~= source ) or ( type( input ) ~= "table" ) then return end
+		if ( client ~= source ) or ( type( input ) ~= "table" ) or ( getElementData( client, "client:loggedin" ) == 1 ) then return end
 		if ( prevent_form_spam[ client ] ) and ( prevent_form_spam[ client ].count >= 5 ) then
-			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 7 )
+			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 7, nil, true )
 			if ( isTimer( prevent_form_spam[ client ].reset ) ) then
 				resetTimer( prevent_form_spam[ client ].reset )
 			end
@@ -28,7 +28,7 @@ addEventHandler( getResourceName( resource ) .. ":cegui:verify", root,
 							--[[
 							-- If you want to hide the warning eventually, just uncomment this
 							if ( prevent_form_spam[ player ].count >= 5 ) then
-								triggerClientEvent( player, getResourceName( resource ) .. ":cegui:error", player, nil )
+								triggerClientEvent( player, getResourceName( resource ) .. ":cegui:error", player, nil, nil, true )
 							end
 							]]
 							
@@ -37,10 +37,10 @@ addEventHandler( getResourceName( resource ) .. ":cegui:verify", root,
 					end, 1100, 1, client )
 				end
 			else
-				triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 2 )
+				triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 2, nil, true )
 			end
 		else
-			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 1 )
+			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 1, nil, true )
 		end
 	end
 )

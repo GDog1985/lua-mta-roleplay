@@ -19,13 +19,13 @@ cegui.errors.phrases = {
 	{ "That username appears to be taken already.",   tocolor( 220, 55, 55, 185 ), 	"ERROR OCCURRED: " },
 	{ "Logging in right now...",  				 	  tocolor( 55, 120, 200, 175 ), "PROCESS: " },
 	{ "Request timeout occurred, try again.",  		  tocolor( 220, 55, 55, 185 ), 	"PROCESS ERROR: " },
-	{ "Please refrain from spamming the login form.", tocolor( 210, 120, 33, 185 ), "WARNING: " }
+	{ "Please refrain from spamming the login form.", tocolor( 210, 120, 33, 185 ), "WARNING: " },
+	{ "You have successfully registered. You can now log in.", tocolor( 30, 200, 45, 185 ), "SUCCESS: " }
 }
 
 local screen_width, screen_height = guiGetScreenSize( )
 local window_width, window_height = 320, 320
 
-local logged_in = false
 local response_timeout, pending_tick, response_tick, has_responded = 10000, 0, 0, false
 
 function showLoginWindow( )
@@ -35,7 +35,7 @@ function showLoginWindow( )
 		return
 	end
 	
-	if ( logged_in ) then return end
+	if ( getElementData( localPlayer, "client:loggedin" ) == 1 ) then return end
 	
 	cegui.windows.login.window.base = guiCreateWindow( ( screen_width - window_width ) / 2, ( screen_height - window_height ) / 2, window_width, window_height, "Log In or Register", false )
 	guiWindowSetSizable( cegui.windows.login.window.base, false )
@@ -52,6 +52,7 @@ function showLoginWindow( )
 	cegui.windows.login.button.register = guiCreateButton( 30, 260, window_width - 60, 30, "Register", false, cegui.windows.login.window.base )
 	
 	local function proceedFurther( )
+		has_responded = false
 		local element = ( ( source ~= cegui.windows.login.button.login and source ~= cegui.windows.login.button.register ) and false or true )
 		if ( not element ) then return end
 		cegui.windows.input.login.username, cegui.windows.input.login.password = guiGetText( cegui.windows.login.edit.username ), guiGetText( cegui.windows.login.edit.password )
@@ -60,7 +61,6 @@ function showLoginWindow( )
 		if ( cegui.windows.input.login.password:len( ) <= 6 ) then
 			triggerEvent( getResourceName( resource ) .. ":cegui:error", localPlayer, 2 )
 			hasErrors = true
-			cegui.errors.current = 2
 		else
 			guiLabelSetColor( cegui.windows.login.label.password, 255, 255, 255 )
 		end
@@ -68,13 +68,12 @@ function showLoginWindow( )
 		if ( cegui.windows.input.login.username:len( ) <= 2 ) then
 			triggerEvent( getResourceName( resource ) .. ":cegui:error", localPlayer, 1 )
 			hasErrors = true
-			cegui.errors.current = 1
 		else
 			guiLabelSetColor( cegui.windows.login.label.username, 255, 255, 255 )
 		end
 		
 		if ( hasErrors ) then return end
-		cegui.errors.current = 5
+		triggerEvent( getResourceName( resource ) .. ":cegui:error", localPlayer, 5 )
 		
 		for _,type in pairs( cegui.windows.login ) do
 			for _,element in pairs( type ) do
@@ -84,28 +83,27 @@ function showLoginWindow( )
 			end
 		end
 		
-		triggerServerEvent( getResourceName( resource ) .. ":cegui:verify", localPlayer, cegui.windows.input.login, ( source == cegui.windows.login.button.login and true or false ) )
 		pending_tick = getTickCount( )
+		triggerServerEvent( getResourceName( resource ) .. ":cegui:verify", localPlayer, cegui.windows.input.login, ( source == cegui.windows.login.button.login and true or false ) )
 		
 		addEventHandler( "onClientRender", root,
 			function( )
-				if ( has_responded ) then return end
-				if ( getTickCount( ) - pending_tick >= response_timeout ) then
-					cegui.errors.current = 6
+				if ( getTickCount( ) - pending_tick >= response_timeout ) and ( cegui.errors.current ~= 6 ) and ( not has_responded ) then
+					triggerEvent( getResourceName( resource ) .. ":cegui:error", localPlayer, 6 )
 				end
 			end
 		)
 	end
+	
 	addEventHandler( "onClientGUIClick", cegui.windows.login.button.login, proceedFurther, false )
 	addEventHandler( "onClientGUIClick", cegui.windows.login.button.register, proceedFurther, false )
 	
 	showCursor( true, true )
-	addEventHandler( "onClientRender", root, showNotificationBox )
 end
 
 function showNotificationBox( )
-	if ( not isElement( cegui.windows.login.window.base ) ) or ( logged_in ) or ( not cegui.errors.current ) then return end
-	local text = ( cegui.errors.alternate and cegui.errors.phrases[ cegui.errors.current ][ 4 ][ cegui.errors.alternate ] or cegui.errors.phrases[ cegui.errors.current ][ 3 ] .. cegui.errors.phrases[ cegui.errors.current ][ 1 ] )
+	if ( not cegui.errors.current ) then return end
+	local text = ( ( cegui.errors.alternate and cegui.errors.phrases[ cegui.errors.current ][ 4 ] and cegui.errors.phrases[ cegui.errors.current ][ 4 ][ cegui.errors.alternate ] ) and cegui.errors.phrases[ cegui.errors.current ][ 4 ][ cegui.errors.alternate ] or cegui.errors.phrases[ cegui.errors.current ][ 3 ] .. cegui.errors.phrases[ cegui.errors.current ][ 1 ] )
 	local text_width, text_height = dxGetTextWidth( text ), dxGetFontHeight( )
 	dxDrawRectangle( 0, screen_height - 40, screen_width, screen_height, cegui.errors.phrases[ cegui.errors.current ][ 2 ] )
 	dxDrawText( text, ( screen_width - text_width ) / 2 + 1, screen_height - 40 + 16, text_width, text_height, tocolor( 4, 4, 4, 85 ) )
@@ -114,12 +112,12 @@ end
 
 addEvent( getResourceName( resource ) .. ":cegui:error", true)
 addEventHandler( getResourceName( resource ) .. ":cegui:error", root,
-	function( errorID, alternateErrorID )
+	function( errorID, alternateErrorID, wasServer )
 		cegui.errors.current = errorID
 		cegui.errors.alternate = nil
 		
 		if ( errorID ~= nil ) then
-			cegui.errors.alternate = ( not alternateErrorID and nil or alternateErrorID )
+			cegui.errors.alternate = alternateErrorID
 			
 			if ( errorID == 1 ) or ( errorID == 4 ) then
 				guiLabelSetColor( cegui.windows.login.label.username, 220, 55, 55 )
@@ -134,15 +132,15 @@ addEventHandler( getResourceName( resource ) .. ":cegui:error", root,
 					end
 				end
 			end
-			
-			has_responded = true
 		end
+		
+		if ( wasServer ) then has_responded = true end
 	end
 )
 
 addEvent( getResourceName( resource ) .. ":cegui:close", true)
 addEventHandler( getResourceName( resource ) .. ":cegui:close", root,
-	function( )
+	function( wasServer, clearErrors )
 		for _,type in pairs( cegui.windows.login ) do
 			for _,element in pairs( type ) do
 				if ( isElement( element ) ) then
@@ -155,15 +153,22 @@ addEventHandler( getResourceName( resource ) .. ":cegui:close", root,
 		
 		cegui.windows.login = nil
 		showCursor( false, false )
+		
+		if ( wasServer ) then has_responded = true end
+		if ( clearErrors ) then
+			cegui.errors.current = nil
+			cegui.errors.alternate = nil
+		end
 	end
 )
 
 addEventHandler( "onClientResourceStart", resourceRoot,
 	function( )
-		if ( logged_in ) then return end
+		if ( getElementData( localPlayer, "client:loggedin" ) == 1 ) then return end
 		fadeCamera( true, 2.5 )
 		showPlayerHudComponent( "all", false )
 		showChat( false )
 		showLoginWindow( )
+		addEventHandler( "onClientRender", root, showNotificationBox )
 	end
 )

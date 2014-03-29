@@ -34,6 +34,11 @@ local function performProcedures( )
 	end
 end
 
+function getPrivateKey( )
+	if ( sourceResource ~= getThisResource( ) ) then return false end
+	return private_key
+end
+
 addEventHandler( "onResourceStart", resourceRoot,
 	function( )
 		if ( not fileExists( "vault/server.private.mcrt" ) ) then

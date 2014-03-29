@@ -1,14 +1,19 @@
 account = { }
 account.player = { }
 
+local function hash( password )
+	local password = password or ""
+	return teaEncode( sha512( exports.database:escape_string( password, "account" ) .. getPrivateKey( ) ), getPrivateKey( ) )
+end
+
 function new( username, password )
 	if ( not username ) or ( not password ) then
 		outputDebugString( "ACCOUNT: No " .. ( not username and ( not password and "username and password" or "username" ) or "password" ) .. " defined.", 1 )
 		return false, 1
 	end
 	
-	local username, password = base64Encode( exports.database:escape_string( username, "account" ) ), base64Encode( sha512( exports.database:escape_string( password, "account" ) ) )
-	if ( exports.database:query( "SELECT 1 FROM `accounts` WHERE `username` = ? LIMIT 1", username ) ) then
+	local username, password = base64Encode( exports.database:escape_string( username, "account" ) ), hash( password )
+	if ( get( username ) ) then
 		return false, 2
 	else
 		return exports.database:insert_id( "INSERT INTO `accounts` (`username`, `password`) VALUES (?, ?)", username, password )
@@ -32,7 +37,7 @@ function get( parameter )
 			return false, 2
 		end
 	elseif ( type( parameter ) == "string" ) then
-		local result, num_rows = exports.database:query( "SELECT `id` FROM `accounts` WHERE `username` = ? LIMIT 1", base64Encode( exports.database:escape_string( parameter ) ) )
+		local result, num_rows = exports.database:query( "SELECT `id` FROM `accounts` WHERE `username` = ? LIMIT 1", base64Encode( exports.database:escape_string( parameter, "account" ) ) )
 		if ( result ) and ( num_rows > 0 ) then
 			return result
 		else
@@ -62,7 +67,7 @@ function save( player, wasAutomatic )
 	end
 	
 	if ( account.player[ player ] ) then
-		if ( exports.database:execute( "UPDATE `accounts` SET `username` = ?, `admin` = ? WHERE `id` = ?", account.player[ player ].username, account.player[ player ].admin, account.player[ player ].id ) ) then
+		if ( exports.database:execute( "UPDATE `accounts` SET `username` = ?, `admin` = ? WHERE `id` = ?", base64Encode( exports.database:escape_string( account.player[ player ].username, "account" ) ), account.player[ player ].admin, account.player[ player ].id ) ) then
 			if ( not wasAutomatic ) then
 				outputDebugString( "ACCOUNT: Saved account '" .. account.player[ player ].username .. "'." )
 			end
@@ -110,7 +115,7 @@ function try( player, username, password )
 		return false, 1
 	end
 	
-	local query, num_rows = exports.database:query( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `username` = ? AND `password` = ? AND `is_deleted` = '0' LIMIT 1", exports.database:escape_string( username, "account" ), exports.database:escape_string( password, "account" ) )
+	local query, num_rows = exports.database:query( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `username` = ? AND `password` = ? AND `is_deleted` = '0' LIMIT 1", base64Encode( exports.database:escape_string( username, "account" ) ), hash( password ) )
 	if ( query ) and ( num_rows > 0 ) then
 		if ( not is_on_already( query.username ) ) then
 			if ( exports.database:execute( "UPDATE `accounts` SET `last_login` = NOW(), `last_ip` = ? WHERE `id` = ?", getPlayerIP( player ), query.id ) ) then
@@ -142,9 +147,10 @@ addEventHandler( getResourceName( resource ) .. ":login", root,
 	function( input )
 		local try, error = try( source, input.username, input.password )
 		if ( try ) then
-			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:close", source )
+			setElementData( source, "client:loggedin", 1, true )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:close", source, true, true )
 		else
-			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 3, error )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 3, error, true )
 		end
 	end
 )
@@ -152,10 +158,10 @@ addEventHandler( getResourceName( resource ) .. ":login", root,
 addEvent( getResourceName( resource ) .. ":register", true )
 addEventHandler( getResourceName( resource ) .. ":register", root,
 	function( input )
-		if ( not get( input.username ) ) then
-			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:close", source )
+		if ( new( input.username, input.password ) ) then
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 8, nil, true )
 		else
-			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 4 )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 4, nil, true )
 		end
 	end
 )
