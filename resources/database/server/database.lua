@@ -30,7 +30,7 @@ local patterns = {
 local function connect( )
 	database.queue.connection = dbConnect( database.configuration.database_type, ( database.configuration.database_type == "sqlite" and database.configuration.database_file or "dbname=" .. database.configuration.database .. ";host=" .. database.configuration.hostname ), ( database.configuration.database_type == "sqlite" and "" or database.configuration.username ), ( database.configuration.database_type == "sqlite" and "" or database.configuration.password ), "share=1;batch=" .. database.configuration.database_batch .. ";log=" .. database.configuration.database_log .. ";tag=" .. database.configuration.database_tag )
 	
-	if ( database.queue.connection ) and ( query( "SELECT 1", database.queue.connection ) ) then
+	if ( database.queue.connection ) then
 		database.connection = database.queue.connection
 		database.queue.connection = nil
 		outputDebugString( "DATABASE: Database connection initialized." )
@@ -67,18 +67,13 @@ function ping( )
 end
 
 function query( queryString, ... )
-	local parameters = { ... }
-	local possibleHandler = parameters[ 1 ]
-	
 	if ( not queryString ) then
 		outputDebugString( "DATABASE: Database query string missing.", 1 )
 		return false, 1
 	end
 	
-	local connection, connectionState = ( database.connection and database.connection or ( ( ( type( possibleHandler ) == "userdata" ) and ( possibleHandler == database.queue.connection ) ) and database.queue.connection or nil ) ), ( database.connection and 1 or ( ( ( type( possibleHandler ) == "userdata" ) and ( possibleHandler == database.queue.connection ) ) and 2 or 0 ) )
-	if ( connection ) then
-		if ( connectionState == 2 ) then table.remove( parameters, 1 ) end
-		local query = #parameters > 0 and dbQuery( connection, queryString, parameters ) or dbQuery( connection, queryString )
+	if ( database.connection ) then
+		local query = (...) and dbQuery( database.connection, queryString, ... ) or dbQuery( database.connection, queryString )
 		if ( query ) then
 			local result, num_affected_rows, last_insert_id = dbPoll( query, -1 )
 			if ( result == false ) then
@@ -89,7 +84,6 @@ function query( queryString, ... )
 			else
 				return result, num_affected_rows, last_insert_id
 			end
-			return true
 		end
 	end
 	
@@ -105,10 +99,8 @@ function execute( queryString, ... )
 		return false, 1
 	end
 	
-	local connection, connectionState = ( database.connection and database.connection or ( ( ( type( possibleHandler ) == "userdata" ) and ( possibleHandler == database.queue.connection ) ) and database.queue.connection or nil ) ), ( database.connection and 1 or ( ( ( type( possibleHandler ) == "userdata" ) and ( possibleHandler == database.queue.connection ) ) and 2 or 0 ) )
-	if ( connection ) then
-		if ( connectionState == 2 ) then table.remove( parameters, 1 ) end
-		local query = #parameters > 0 and dbExec( connection, queryString, parameters ) or dbExec( connection, queryString )
+	if ( database.connection ) then
+		local query = (...) and dbExec( database.connection, queryString, ... ) or dbExec( database.connection, queryString )
 		if ( query ) then
 			return true
 		end
@@ -118,32 +110,10 @@ function execute( queryString, ... )
 end
 
 function insert_id( queryString, ... )
-	local parameters = { ... }
-	local possibleHandler = parameters[ 1 ]
-	
-	if ( not queryString ) then
-		outputDebugString( "DATABASE: Database query string missing.", 1 )
-		return false, 1
+	local result, _, last_insert_id = query( queryString, ... )
+	if ( result ) then
+		return last_insert_id
 	end
-	
-	local connection, connectionState = ( database.connection and database.connection or ( ( ( type( possibleHandler ) == "userdata" ) and ( possibleHandler == database.queue.connection ) ) and database.queue.connection or nil ) ), ( database.connection and 1 or ( ( ( type( possibleHandler ) == "userdata" ) and ( possibleHandler == database.queue.connection ) ) and 2 or 0 ) )
-	if ( connection ) then
-		if ( connectionState == 2 ) then table.remove( parameters, 1 ) end
-		local query = #parameters > 0 and dbQuery( connection, queryString, parameters ) or dbQuery( connection, queryString )
-		if ( query ) then
-			local result, num_affected_rows, last_insert_id = dbPoll( query, -1 )
-			if ( result == false ) then
-				local error_code, error_msg = num_affected_rows, last_insert_id
-				dbFree( query )
-				outputDebugString( "DATABASE: Database query failed - (errno " .. error_code .. "; error: " .. error_msg .. ").", 1 )
-				return false
-			else
-				return last_insert_id
-			end
-			return true
-		end
-	end
-	
 	return false
 end
 
