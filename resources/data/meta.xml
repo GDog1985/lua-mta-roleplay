@@ -1,6 +1,0 @@
-<meta>
-	<info name="Data handler" description="A dedicated data handler resource, which controls all element data initialized by the resource." author="Socialz" type="script" />
-	<script src="server/data.lua" type="server" />
-	<export function="unprotect" type="server" />
-	<export function="protect" type="server" />
-</meta>

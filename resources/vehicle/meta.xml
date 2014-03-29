@@ -1,7 +1,7 @@
 <meta>
 	<info name="Vehicle handler" description="A dedicated vehicle handler resource, which controls all vehicles initialized by the resource." author="Socialz" type="script" />
 	<include resource="database" />
-	<include resource="data" />
+	<include resource="protect" />
 	<script src="server/initialization.lua" type="server" />
 	<script src="server/vehicle.lua" type="server" />
 	<export function="new" type="server" />
