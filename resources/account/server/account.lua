@@ -12,11 +12,10 @@ function new( username, password )
 		return false, 1
 	end
 	
-	local username, password = base64Encode( exports.database:escape_string( username, "account" ) ), hash( password )
 	if ( get( username ) ) then
 		return false, 2
 	else
-		return exports.database:insert_id( "INSERT INTO `accounts` (`username`, `password`) VALUES (?, ?)", username, password )
+		return exports.database:insert_id( "INSERT INTO `accounts` (`username`, `password`) VALUES (?, ?)", base64Encode( exports.database:escape_string( username, "account" ) ), hash( password ) )
 	end
 	
 	return false
@@ -30,14 +29,14 @@ function get( parameter )
 	
 	if ( type( parameter ) == "integer" ) then
 		local parameter = exports.database:escape_string( parameter, "digit" )
-		local result, num_rows = exports.database:query( "SELECT `username` FROM `accounts` WHERE `id` = ? LIMIT 1", parameter )
+		local result, num_rows = exports.database:query( "SELECT `username`, `admin` FROM `accounts` WHERE `id` = ? LIMIT 1", parameter )
 		if ( result ) and ( num_rows > 0 ) then
 			return result
 		else
 			return false, 2
 		end
 	elseif ( type( parameter ) == "string" ) then
-		local result, num_rows = exports.database:query( "SELECT `id` FROM `accounts` WHERE `username` = ? LIMIT 1", base64Encode( exports.database:escape_string( parameter, "account" ) ) )
+		local result, num_rows = exports.database:query( "SELECT `id`, `admin` FROM `accounts` WHERE `username` = ? LIMIT 1", base64Encode( exports.database:escape_string( parameter, "account" ) ) )
 		if ( result ) and ( num_rows > 0 ) then
 			return result
 		else
@@ -46,7 +45,7 @@ function get( parameter )
 	elseif ( type( parameter ) == "userdata" ) and ( isElement( parameter ) ) and ( getElementType( parameter ) == "player" ) then
 		local preAccount = account.currents[ parameter ]
 		if ( preAccount ) then
-			local result, num_rows = exports.database:query( "SELECT `username` FROM `accounts` WHERE `id` = ? LIMIT 1", preAccount.id )
+			local result, num_rows = exports.database:query( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `id` = ? LIMIT 1", preAccount.id )
 			if ( result ) and ( num_rows > 0 ) then
 				return result
 			else
