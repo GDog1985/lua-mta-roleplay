@@ -1,0 +1,26 @@
+<acl>
+	<group name="Everyone">
+		<acl name="Default"></acl>
+		<object name="user.*"></object>
+	</group>
+	
+	<group name="Admin">
+		<acl name="Admin"></acl>
+		<object name="resource.*"></object>
+		<object name="user.Console"></object>
+	</group>
+	
+	<acl name="Default">
+		<right name="general.*" access="false"></right>
+		<right name="command.*" access="false"></right>
+		<right name="function.*" access="false"></right>
+	</acl>
+	
+	<acl name="Admin">
+		<right name="general.*" access="true"></right>
+		<right name="general.ModifyOtherObjects" access="true"></right>
+		<right name="command.*" access="true"></right>
+		<right name="function.*" access="true"></right>
+		<right name="function.shutdown" access="true"></right>
+	</acl>
+</acl>
