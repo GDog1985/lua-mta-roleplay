@@ -1,6 +1,7 @@
 <meta>
 	<info name="Account handler" description="A dedicated account handler resource, which controls all accounts initialized by the resource." author="Socialz" type="script" />
 	<include resource="database" />
+	<include resource="data" />
 	<script src="cegui/client/login.lua" type="client" cache="false" />
 	<script src="cegui/server/login.lua" type="server" />
 	<script src="client/account.lua" type="client" cache="false" />
