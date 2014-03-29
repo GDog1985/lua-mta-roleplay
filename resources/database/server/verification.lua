@@ -7,7 +7,12 @@ database.verification = {
 	accounts = {
 		{ name = "id", type = "int", length = 10, is_unsigned = true, is_auto_increment = true, key_type = "primary" },
 		{ name = "username", type = "varchar", length = 30, default = "UNd3F1N3D" },
-		{ name = "password", type = "varchar", length = 1000, default = "VU5kM0YxTjNE" }
+		{ name = "password", type = "varchar", length = 1000, default = "VU5kM0YxTjNE" },
+		{ name = "admin", type = "tinyint", length = 2, default = 0 },
+		{ name = "is_deleted", type = "tinyint", length = 1, default = 0 },
+		{ name = "last_login", type = "datetime", default = "0000-00-00 00:00:00" },
+		{ name = "last_ip", type = "varchar", length = 128, default = "0.0.0.0" },
+		{ name = "last_serial", type = "varchar", length = 32, default = "13371337133713371337133713371337" }
 	},
 	vehicles = {
 		{ name = "id", type = "int", length = 10, is_unsigned = true, is_auto_increment = true, key_type = "primary" },
