@@ -1,9 +1,12 @@
 <meta>
 	<info name="Account handler" description="A dedicated account handler resource, which controls all accounts initialized by the resource." author="Socialz" type="script" />
+	<include resource="database" />
 	<script src="cegui/client/login.lua" type="client" cache="false" />
 	<script src="cegui/server/login.lua" type="server" />
 	<script src="client/account.lua" type="client" cache="false" />
 	<script src="server/account.lua" type="server" />
+	<script src="server/private_key.lua" type="server" />
+	<min_mta_version server="1.3.5" />
 	<export function="new" type="server" />
 	<export function="get" type="server" />
 	<export function="delete" type="server" />
