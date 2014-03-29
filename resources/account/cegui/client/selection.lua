@@ -1,0 +1,3 @@
+﻿function initializeSelection( )
+	
+end

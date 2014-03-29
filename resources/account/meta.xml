@@ -2,7 +2,11 @@
 	<info name="Account handler" description="A dedicated account handler resource, which controls all accounts initialized by the resource." author="Socialz" type="script" />
 	<include resource="database" />
 	<include resource="protect" />
+	<script src="cegui/client/shared.lua" type="client" cache="false" />
+	<script src="cegui/client/error.lua" type="client" cache="false" />
 	<script src="cegui/client/login.lua" type="client" cache="false" />
+	<script src="cegui/client/roamer.lua" type="client" cache="false" />
+	<script src="cegui/client/selection.lua" type="client" cache="false" />
 	<script src="cegui/server/login.lua" type="server" />
 	<script src="client/account.lua" type="client" cache="false" />
 	<script src="server/account.lua" type="server" />
@@ -11,4 +15,8 @@
 	<export function="new" type="server" />
 	<export function="get" type="server" />
 	<export function="delete" type="server" />
+	<export function="playRoamer" type="client" />
+	<export function="pauseRoamer" type="client" />
+	<export function="resetRoamer" type="client" />
+	<export function="useCameraRoam" type="client" />
 </meta>
