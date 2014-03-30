@@ -10,12 +10,11 @@ local response_timeout, pending_tick, response_tick, has_responded = 10000, 0, 0
 
 function showLoginWindow( )
 	if ( isElement( cegui.windows.login ) ) then
-		triggerEvent( getResourceName( resource ) .. ":cegui:close", localPlayer )
-		removeEventHandler( "onClientRender", root, showNotificationBox )
+		triggerEvent( getResourceName( resource ) .. ":cegui:close", localPlayer, "login" )
 		return
 	end
 	
-	if ( getElementData( localPlayer, "client:loggedin" ) == 1 ) then return end
+	if ( getElementData( localPlayer, "client:username" ) ) then return end
 	
 	cegui.windows.login.window.base = guiCreateWindow( ( screen_width - window_width ) / 2, ( screen_height - window_height ) / 2, window_width, window_height, "Log In or Register", false )
 	guiWindowSetSizable( cegui.windows.login.window.base, false )
@@ -65,42 +64,18 @@ function showLoginWindow( )
 		
 		pending_tick = getTickCount( )
 		triggerServerEvent( getResourceName( resource ) .. ":cegui:verify", localPlayer, cegui.windows.input.login, ( source == cegui.windows.login.button.login and true or false ) )
-		
-		addEventHandler( "onClientRender", root,
-			function( )
-				if ( getTickCount( ) - pending_tick >= response_timeout ) and ( cegui.errors.current ~= 6 ) and ( not has_responded ) then
-					triggerEvent( getResourceName( resource ) .. ":cegui:error", localPlayer, 6 )
-				end
-			end
-		)
 	end
 	
 	addEventHandler( "onClientGUIClick", cegui.windows.login.button.login, proceedFurther, false )
 	addEventHandler( "onClientGUIClick", cegui.windows.login.button.register, proceedFurther, false )
+	addEventHandler( "onClientRender", root, renderLoginProcedures )
 	
 	showCursor( true, true )
 end
 
-addEvent( getResourceName( resource ) .. ":cegui:close", true)
-addEventHandler( getResourceName( resource ) .. ":cegui:close", root,
-	function( wasServer, clearErrors )
-		for _,type in pairs( cegui.windows.login ) do
-			for _,element in pairs( type ) do
-				if ( isElement( element ) ) then
-					destroyElement( element, false )
-					element = nil
-				end
-			end
-			type = nil
-		end
-		
-		cegui.windows.login = nil
-		showCursor( false, false )
-		
-		if ( wasServer ) then has_responded = true end
-		if ( clearErrors ) then
-			cegui.errors.current = nil
-			cegui.errors.alternate = nil
-		end
+function renderLoginProcedures( )
+	dxDrawRectangle( 0, 0, screen_width, screen_height, tocolor( 0, 0, 0, 0.15 * 255 ), false )
+	if ( getTickCount( ) - pending_tick >= response_timeout ) and ( cegui.errors.current ~= 6 ) and ( not has_responded ) and ( pending_tick > 0 ) then
+		triggerEvent( getResourceName( resource ) .. ":cegui:error", localPlayer, 6 )
 	end
-)
+end

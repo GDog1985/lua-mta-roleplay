@@ -3,7 +3,7 @@
 addEvent( getResourceName( resource ) .. ":cegui:verify", true )
 addEventHandler( getResourceName( resource ) .. ":cegui:verify", root,
 	function( input, loginOrRegister )
-		if ( client ~= source ) or ( type( input ) ~= "table" ) or ( getElementData( client, "client:loggedin" ) == 1 ) then return end
+		if ( client ~= source ) or ( type( input ) ~= "table" ) or ( getElementData( client, "client:username" ) ) then return end
 		if ( prevent_form_spam[ client ] ) and ( prevent_form_spam[ client ].count >= 5 ) then
 			triggerClientEvent( client, getResourceName( resource ) .. ":cegui:error", client, 7, nil, true )
 			if ( isTimer( prevent_form_spam[ client ].reset ) ) then
