@@ -1,4 +1,4 @@
-database.configuration.automated_resources = { account = "accounts", vehicle = "vehicles" }
+database.configuration.automated_resources = { account = { "accounts", "characters" }, vehicle = { "vehicles" } }
 database.configuration.default_charset = get( "default_charset" ) or "utf8"
 database.configuration.default_engine = get( "default_engine" ) or "InnoDB"
 database.utility = { }
@@ -9,6 +9,15 @@ database.verification = {
 		{ name = "username", type = "varchar", length = 30, default = "UNd3F1N3D" },
 		{ name = "password", type = "varchar", length = 1000, default = "VU5kM0YxTjNE" },
 		{ name = "admin", type = "tinyint", length = 2, default = 0 },
+		{ name = "is_deleted", type = "tinyint", length = 1, default = 0 },
+		{ name = "last_login", type = "datetime", default = "0000-00-00 00:00:00" },
+		{ name = "last_ip", type = "varchar", length = 128, default = "0.0.0.0" },
+		{ name = "last_serial", type = "varchar", length = 32, default = "13371337133713371337133713371337" }
+	},
+	characters = {
+		{ name = "id", type = "int", length = 10, is_unsigned = true, is_auto_increment = true, key_type = "primary" },
+		{ name = "name", type = "varchar", length = 30, default = "UNd3F1N3D" },
+		{ name = "account_id", type = "int", length = 11, default = 0, is_unsigned = true },
 		{ name = "is_deleted", type = "tinyint", length = 1, default = 0 },
 		{ name = "last_login", type = "datetime", default = "0000-00-00 00:00:00" },
 		{ name = "last_ip", type = "varchar", length = 128, default = "0.0.0.0" },
@@ -96,11 +105,13 @@ addEventHandler( "onResourceStart", root,
 	function( resource )
 		if ( database.configuration.automated_resources[ getResourceName( resource ) ] ) then
 			outputDebugString( "DATABASE: Verification check will be ran on just started '" .. getResourceName( resource ) .. "' resource." )
-			local _return, _code = verify_table( database.configuration.automated_resources[ getResourceName( resource ) ] )
-			if ( _return ) and ( _code > 0 ) then
-				outputDebugString( "DATABASE: Verification check completed: database created." )
-			else
-				outputDebugString( "DATABASE: Verification check completed: database wasn't created, because it already exists, most probably." )
+			for _,database in ipairs( database.configuration.automated_resources[ getResourceName( resource ) ] ) do
+				local _return, _code = verify_table( database )
+				if ( _return ) and ( _code > 0 ) then
+					outputDebugString( "DATABASE: Verification check completed for \"" .. database .. "\": database created." )
+				else
+					outputDebugString( "DATABASE: Verification check completed for \"" .. database .. "\": database wasn't created, because it already exists, most probably." )
+				end
 			end
 		end
 	end

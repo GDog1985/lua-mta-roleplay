@@ -11,7 +11,7 @@ database.configuration.database_tag = get( "database_tag" ) or "script"
 database.configuration.hostname = get( "hostname" ) or "127.0.0.1"
 database.configuration.username = get( "username" ) or "root"
 database.configuration.password = get( "password" ) or "root"
-database.configuration.database = get( "database" ) or "mta_server"
+database.configuration.database = get( "database" ) or "mta_roleplay"
 
 database.connection = nil
 
