@@ -8,6 +8,7 @@
 	<script src="cegui/client/roamer.lua" type="client" cache="false" />
 	<script src="cegui/client/selection.lua" type="client" cache="false" />
 	<script src="cegui/server/login.lua" type="server" />
+	<script src="cegui/server/selection.lua" type="server" />
 	<script src="client/account.lua" type="client" cache="false" />
 	<script src="server/account.lua" type="server" />
 	<script src="server/private_key.lua" type="server" />
