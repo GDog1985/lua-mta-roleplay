@@ -20,6 +20,7 @@ local patterns = {
 	[ "all_no_double" ] 		= { "[^%a%d%s%.%-%_%:%,%;]", true },
 	[ "all" ] 					= { "[^%a%d%s%.%-%_%:%,%;]" },
 	[ "account" ]				= { "[^%a%d%.%-%_%!%?]" },
+	[ "character" ]				= { "[^%a%d%s%-]" },
 	[ "digit" ] 				= { "[^%d]" },
 	[ "char_digit" ] 			= { "[^%a%d]" },
 	[ "char_digit_special" ]	= { "[^%a%d%_]" },
