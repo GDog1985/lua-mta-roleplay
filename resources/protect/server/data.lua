@@ -7,6 +7,7 @@ addEventHandler( "onElementDataChange", root,
 		local data_protected = getElementData( source, protection_prefix .. ":" .. key )
 		if ( data_protected ) then
 			setElementData( source, key, old_value, true )
+			outputDebugString( "No (" .. key .. " : " .. data .. ") // old: (" .. key .. ", " .. old_value .. ")." )
 		end
 	end
 )
@@ -21,6 +22,8 @@ end
 
 addEventHandler( "onPlayerJoin", root,
 	function( )
+		protect( source, "client:id" )
 		protect( source, "client:loggedin" )
+		protect( source, "client:username" )
 	end
 )
