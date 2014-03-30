@@ -6,6 +6,7 @@
 	<export function="disconnect" type="server" />
 	<export function="ping" type="server" />
 	<export function="query" type="server" />
+	<export function="query_single" type="server" />
 	<export function="execute" type="server" />
 	<export function="insert_id" type="server" />
 	<export function="free_result" type="server" />

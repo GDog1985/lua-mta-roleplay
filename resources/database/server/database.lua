@@ -90,6 +90,14 @@ function query( queryString, ... )
 	return false
 end
 
+function query_single( queryString, ... )
+	local result, num_affected_rows, last_insert_id = query( queryString, ... )
+	if ( result ) then
+		return result[ 1 ] and result[ 1 ] or result, num_affected_rows, last_insert_id
+	end
+	return false
+end
+
 function execute( queryString, ... )
 	local parameters = { ... }
 	local possibleHandler = parameters[ 1 ]
