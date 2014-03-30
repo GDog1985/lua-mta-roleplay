@@ -12,7 +12,10 @@ cegui.errors.phrases = {
 	{ "Logging in right now...",  				 	  tocolor( 55, 120, 200, 175 ), "PROCESS: " },
 	{ "Request timeout occurred, try again.",  		  tocolor( 220, 55, 55, 185 ), 	"PROCESS ERROR: " },
 	{ "Please refrain from spamming the login form.", tocolor( 210, 120, 33, 185 ), "WARNING: " },
-	{ "You have successfully registered. You can now log in.", tocolor( 30, 200, 45, 185 ), "SUCCESS: " }
+	{ "You have successfully registered. You can now log in.", tocolor( 30, 200, 45, 185 ), "SUCCESS: " },
+	{ "Please select a character from the gridlist.", tocolor( 220, 55, 55, 185 ), "ERROR OCCURRED: " },
+	{ "Selecting character right now...",  			  tocolor( 55, 120, 200, 175 ), "PROCESS: " },
+	{ "Please stop screwing up my system right now.", tocolor( 220, 55, 55, 185 ), "ERROR OCCURRED: " }
 }
 
 function showNotificationBox( )
@@ -40,7 +43,7 @@ addEventHandler( getResourceName( resource ) .. ":cegui:error:show", root,
 
 addEvent( getResourceName( resource ) .. ":cegui:error", true )
 addEventHandler( getResourceName( resource ) .. ":cegui:error", root,
-	function( errorID, alternateErrorID, wasServer )
+	function( errorID, alternateErrorID, wasServer, cegui_element )
 		cegui.errors.current = errorID
 		cegui.errors.alternate = nil
 		
@@ -51,9 +54,12 @@ addEventHandler( getResourceName( resource ) .. ":cegui:error", root,
 				guiLabelSetColor( cegui.windows.login.label.username, 220, 55, 55 )
 			elseif ( errorID == 2 ) then
 				guiLabelSetColor( cegui.windows.login.label.password, 220, 55, 55 )
+			elseif ( errorID == 9 ) then
+				guiLabelSetColor( cegui.windows.selection.label.header, 220, 55, 55 )
 			end
 			
-			for _,type in pairs( cegui.windows.login ) do
+			local cegui_element = cegui_element or "login"
+			for _,type in pairs( cegui.windows[ cegui_element ] ) do
 				for _,element in pairs( type ) do
 					if ( isElement( element ) ) then
 						guiSetEnabled( element, true )

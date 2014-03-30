@@ -22,6 +22,7 @@ end
 
 addEventHandler( "onPlayerJoin", root,
 	function( )
+		protect( source, "client:character.id" )
 		protect( source, "client:id" )
 		protect( source, "client:loggedin" )
 		protect( source, "client:username" )

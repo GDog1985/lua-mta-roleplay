@@ -12,6 +12,7 @@
 	<script src="client/account.lua" type="client" cache="false" />
 	<script src="server/account.lua" type="server" />
 	<script src="server/private_key.lua" type="server" />
+	<script src="server/selection.lua" type="server" />
 	<min_mta_version server="1.3.5" />
 	<export function="new" type="server" />
 	<export function="get" type="server" />

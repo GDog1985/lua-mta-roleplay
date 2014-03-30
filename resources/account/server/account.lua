@@ -28,23 +28,22 @@ function get( parameter )
 	
 	if ( type( parameter ) == "integer" ) then
 		local parameter = exports.database:escape_string( parameter, "digit" )
-		local result, num_rows = exports.database:query( "SELECT `username`, `admin` FROM `accounts` WHERE `id` = ? LIMIT 1", parameter )
+		local result, num_rows = exports.database:query_single( "SELECT `username`, `admin` FROM `accounts` WHERE `id` = ? LIMIT 1", parameter )
 		if ( result ) and ( num_rows > 0 ) then
 			return result
 		else
 			return false, 2
 		end
 	elseif ( type( parameter ) == "string" ) then
-		local result, num_rows = exports.database:query( "SELECT `id`, `admin` FROM `accounts` WHERE `username` = ? LIMIT 1", base64Encode( exports.database:escape_string( parameter, "account" ) ) )
+		local result, num_rows = exports.database:query_single( "SELECT `id`, `admin` FROM `accounts` WHERE `username` = ? LIMIT 1", base64Encode( exports.database:escape_string( parameter, "account" ) ) )
 		if ( result ) and ( num_rows > 0 ) then
 			return result
 		else
 			return false, 2
 		end
 	elseif ( type( parameter ) == "userdata" ) and ( isElement( parameter ) ) and ( getElementType( parameter ) == "player" ) then
-		local preAccount = account.currents[ parameter ]
-		if ( preAccount ) then
-			local result, num_rows = exports.database:query( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `id` = ? LIMIT 1", preAccount.id )
+		if ( getElementData( parameter, "client:id" ) ) then
+			local result, num_rows = exports.database:query_single( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `id` = ? LIMIT 1", getElementData( parameter, "client:id" ) )
 			if ( result ) and ( num_rows > 0 ) then
 				return result
 			else
@@ -64,10 +63,10 @@ function save( player, wasAutomatic )
 		return false, 1
 	end
 	
-	if ( getElementData( player, "client:username" ) ) then
+	if ( getElementData( player, "client:id" ) ) then
 		if ( exports.database:execute( "UPDATE `accounts` SET `username` = ?, `admin` = ? WHERE `id` = ?", base64Encode( exports.database:escape_string( getElementData( player, "client:username" ), "account" ) ), getElementData( player, "client:admin" ), getElementData( player, "client:id" ) ) ) then
 			if ( not wasAutomatic ) then
-				outputDebugString( "ACCOUNT: Saved account '" .. getElementData( player, "client:username" ) .. "'." )
+				outputDebugString( "ACCOUNT: Saved account '" .. getElementData( player, "client:username" ) .. "' (" .. getElementData( player, "client:id" ) .. ")." )
 			end
 			return true
 		else
@@ -182,5 +181,11 @@ addEventHandler( getResourceName( resource ) .. ":register", root,
 		else
 			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 4, nil, true )
 		end
+	end
+)
+
+addEventHandler( "onPlayerQuit", root,
+	function( )
+		save( source, true )
 	end
 )

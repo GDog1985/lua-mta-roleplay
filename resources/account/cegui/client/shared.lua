@@ -60,6 +60,8 @@ addEventHandler( getResourceName( resource ) .. ":cegui:close", root,
 		
 		if ( cegui_element == "login" ) then
 			removeEventHandler( "onClientRender", root, renderLoginProcedures )
+		elseif ( cegui_element == "selection" ) then
+			removeEventHandler( "onClientRender", root, renderSelectionProcedures )
 		end
 	end
 )
