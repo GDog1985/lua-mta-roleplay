@@ -1,5 +1,4 @@
 account = { }
-account.player = { }
 
 local function hash( password )
 	local password = password or ""
@@ -65,10 +64,10 @@ function save( player, wasAutomatic )
 		return false, 1
 	end
 	
-	if ( account.player[ player ] ) then
-		if ( exports.database:execute( "UPDATE `accounts` SET `username` = ?, `admin` = ? WHERE `id` = ?", base64Encode( exports.database:escape_string( account.player[ player ].username, "account" ) ), account.player[ player ].admin, account.player[ player ].id ) ) then
+	if ( getElementData( player, "client:username" ) ) then
+		if ( exports.database:execute( "UPDATE `accounts` SET `username` = ?, `admin` = ? WHERE `id` = ?", base64Encode( exports.database:escape_string( getElementData( player, "client:username" ), "account" ) ), getElementData( player, "client:admin" ), getElementData( player, "client:id" ) ) ) then
 			if ( not wasAutomatic ) then
-				outputDebugString( "ACCOUNT: Saved account '" .. account.player[ player ].username .. "'." )
+				outputDebugString( "ACCOUNT: Saved account '" .. getElementData( player, "client:username" ) .. "'." )
 			end
 			return true
 		else
@@ -100,8 +99,8 @@ function delete( userID, queueDestroy )
 end
 
 function is_on_already( username )
-	for player,values in pairs( account.player ) do
-		if ( values.username == username ) then
+	for _,player in ipairs( getElementsByType( "player" ) ) do
+		if ( getElementData( player, "client:username" ) ) and ( getElementData( player, "client:username" ) == username ) then
 			return player
 		end
 	end
@@ -114,18 +113,11 @@ function try( player, username, password )
 		return false, 1
 	end
 	
-	local query, num_rows = exports.database:query( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `username` = ? AND `password` = ? AND `is_deleted` = '0' LIMIT 1", base64Encode( exports.database:escape_string( username, "account" ) ), hash( password ) )
+	local query, num_rows = exports.database:query_single( "SELECT `id`, `username`, `admin` FROM `accounts` WHERE `username` = ? AND `password` = ? AND `is_deleted` = '0' LIMIT 1", base64Encode( exports.database:escape_string( username, "account" ) ), hash( password ) )
 	if ( query ) and ( num_rows > 0 ) then
 		if ( not is_on_already( query.username ) ) then
 			if ( exports.database:execute( "UPDATE `accounts` SET `last_login` = NOW(), `last_ip` = ? WHERE `id` = ?", getPlayerIP( player ), query.id ) ) then
-				account.player[ player ] = {
-					id = query.id,
-					username = query.username,
-					admin = query.admin,
-					loggedin = true
-				}
-				
-				return true
+				return query
 			else
 				return false, 4
 			end
@@ -141,13 +133,41 @@ end
 addEvent( getResourceName( resource ) .. ":try", true )
 addEventHandler( getResourceName( resource ) .. ":try", root, try )
 
+function logOut( player )
+	if ( not isElement( player ) ) then
+		outputDebugString( "ACCOUNT: Invalid player argument passed in.", 1 )
+		return false, 1
+	end
+	
+	if ( save( player ) ) then
+		if ( getElementData( player, "client:id" ) ) then
+			removeElementData( player, "client:id" )
+		end
+		if ( getElementData( player, "client:loggedin" ) ) then
+			removeElementData( player, "client:loggedin" )
+		end
+		if ( getElementData( player, "client:username" ) ) then
+			removeElementData( player, "client:username" )
+		end
+		triggerClientEvent( player, getResourceName( resource ) .. ":cegui:check", player )
+	end
+	
+	return false
+end
+addEvent( getResourceName( resource ) .. ":logout", true )
+addEventHandler( getResourceName( resource ) .. ":logout", root, logOut )
+
 addEvent( getResourceName( resource ) .. ":login", true )
 addEventHandler( getResourceName( resource ) .. ":login", root,
 	function( input )
-		local try, error = try( source, input.username, input.password )
-		if ( try ) then
-			setElementData( source, "client:loggedin", 1, true )
-			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:close", source, true, true )
+		local data, error = try( source, input.username, input.password )
+		if ( data ) then
+			setElementData( source, "client:loggedin", 0, true )
+			setElementData( source, "client:id", data.id, true )
+			setElementData( source, "client:username", base64Decode( data.username ), true )
+			setElementData( source, "client:admin", data.admin, true )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:close", source, "login", true, true )
+			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:show", source, "selection" )
 		else
 			triggerClientEvent( source, getResourceName( resource ) .. ":cegui:error", source, 3, error, true )
 		end
